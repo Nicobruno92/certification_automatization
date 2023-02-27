@@ -4,6 +4,7 @@
 Created on Wed Nov 25 20:02:47 2020
 
 @author: nicobruno
+@email: nicobruno92@gmail.com
 """
 #  Email
 import smtplib, ssl
@@ -13,6 +14,7 @@ from email import encoders
 from email.mime.base import MIMEBase
 
 import pandas as pd
+import os
 
 # For certificate
 from PIL import Image, ImageDraw, ImageFont
@@ -41,6 +43,7 @@ def format_mail(sender_email, receiver_email, subject, body, filename):
         None
         
     else:
+        
         # Open PDF file in binary mode
         with open(filename, "rb") as attachment:
             # Add file as application/octet-stream
@@ -54,7 +57,7 @@ def format_mail(sender_email, receiver_email, subject, body, filename):
         # Add header as key/value pair to attachment part
         part.add_header(
             "Content-Disposition",
-            f"attachment; filename= {filename}",
+            f"attachment; filename= {os.path.basename(filename)}",
         )
         
         # Add attachment to message and convert message to string
@@ -127,5 +130,15 @@ def certificate_maker(certificate_template,student_name,text_color, location_tex
     d.text(xy = location_text, text = student_name, fill=text_color, font=font, anchor = 'mm', align = 'center')
     
     #guardar el certificado con nombre y apellido
-    im.save( save_path +'/certificado_' + student_name + '.pdf')
+    im.save( save_path +'/certificado_' + eliminate_accents(student_name) + '.pdf')
         
+
+def font_size_by_name(student_name, max_size):
+    if len(student_name) > 30:
+        size = max_size / 2
+    elif len(student_name) > 20:
+        size = max_size * 2/3
+    else:
+        size = max_size
+        
+    return int(size)

@@ -14,6 +14,7 @@ from email import encoders
 from email.mime.base import MIMEBase
 
 import pandas as pd
+import os
 
 # For certificate
 from PIL import Image, ImageDraw, ImageFont
@@ -42,6 +43,7 @@ def format_mail(sender_email, receiver_email, subject, body, filename):
         None
         
     else:
+        
         # Open PDF file in binary mode
         with open(filename, "rb") as attachment:
             # Add file as application/octet-stream
@@ -55,7 +57,7 @@ def format_mail(sender_email, receiver_email, subject, body, filename):
         # Add header as key/value pair to attachment part
         part.add_header(
             "Content-Disposition",
-            f"attachment; filename= {filename}",
+            "attachment", filename = filename,
         )
         
         # Add attachment to message and convert message to string
@@ -116,7 +118,7 @@ def eliminate_accents(name):
     return name
 
 
-def certificate_maker(certificate_template,student_name,text_color, location_text, font_name, text_size, save_path = ''):
+def certificate_maker(certificate_template,student_name,text_color, location_text, font_name, text_size, align = 'left', save_path = ''):
     # Fuente y tamaño
     font = ImageFont.truetype(font_name, text_size)
     
@@ -125,8 +127,35 @@ def certificate_maker(certificate_template,student_name,text_color, location_tex
     # crear imagen para el certificado
     d = ImageDraw.Draw(im)
     # composicion de la imagen del certidicado
-    d.text(xy = location_text, text = student_name, fill=text_color, font=font, anchor = 'mm', align = 'center')
     
+    if align == 'center':
+        text_width, text_height = d.textsize(student_name, font)
+        position = (location_text[0]-text_width/2,location_text[1]-text_height)
+        # composicion de la imagen del certidicado
+    
+    elif align == 'right':
+        text_width, text_height = d.textsize(student_name, font)
+        position = (location_text[0]-text_width,location_text[1]-text_height)
+    
+    elif align == 'left':
+        text_width, text_height = d.textsize(student_name, font)
+        position = (location_text[0],location_text[1]-text_height)
+    
+    
+    d.text(xy = position, text = student_name, fill=text_color, font=font,)
+    
+    #print("certificate size:", im.size)
+
     #guardar el certificado con nombre y apellido
     im.save( save_path +'/certificado_' + eliminate_accents(student_name) + '.pdf')
         
+
+def font_size_by_name(student_name, max_size):
+    if len(student_name) > 30:
+        size = max_size / 2
+    elif len(student_name) > 20:
+        size = max_size * 2/3
+    else:
+        size = max_size
+        
+    return int(size)
