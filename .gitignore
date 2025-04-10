@@ -50,4 +50,11 @@ ENV/
 env.bak/
 venv.bak/
 
+
+.history/
+.ipynb_checkpoints/
+.virtual_documents/
+__pycache__/
+
 Certificates/
+congreso_neurociencias/
