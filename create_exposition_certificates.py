@@ -64,42 +64,57 @@ def create_exposition_certificate(
     width=None,
 ):
     expositor_font = ImageFont.truetype(bold_font_path, expositor_size)
-    im = Image.open(certificate_template)
+    im = Image.open(certificate_template).convert("RGB")
     draw = ImageDraw.Draw(im)
 
-    def center_text(text, y, font):
-        text_width = draw.textlength(text, font=font)
-        x = (width - text_width) / 2
-        draw.text((x, y), text, fill=text_color, font=font)
+    def center_text(text, y, font, anchor="ma"):
+        draw.text((width / 2, y), text, fill=text_color, font=font, anchor=anchor)
 
     # --- Posiciones generales ---
-    y_start = 350  # debajo de "Se certifica que"
+    y_start = 810  # Centro exacto entre "Se certifica que" (680) y "Presentó el trabajo" (940)
     max_width = int(width * 0.85)
-    line_spacing = 6
 
     # 1. Nombre
-    center_text(expositor_name, y_start, expositor_font)
+    center_text(expositor_name, y_start, expositor_font, anchor="mm")
 
-    # 2. Título
+    # 2. Título y Autores juntos (Rango de altura total libre: 980 a 1400)
     title = normalize_title_case(title)
-    max_title_height = 150  # espacio vertical para el título
+    max_title_height = 200  # ajustado para que no se exceda
     title_font, title_lines = fit_text_to_box(
         title, bold_font_path, title_size, max_width, max_title_height, draw
     )
-    y_title_start = y_start + expositor_size + 80
-    for i, line in enumerate(title_lines):
-        y = y_title_start + i * (title_font.size + line_spacing)
-        center_text(line, y, title_font)
-
-    # 3. Autores
-    max_authors_height = 80
-    y_authors_start = y_title_start + len(title_lines) * (title_font.size + line_spacing) + 10
+    
+    max_authors_height = 130 # ajustado para los autores
     authors_font, authors_lines = fit_text_to_box(
         authors, italic_font_path, authors_size, max_width, max_authors_height, draw
     )
+    
+    # Calculamos el tamaño total del bloque para poder centrarlo matemáticamente
+    title_spacing = 10
+    authors_spacing = 10
+    block_gap = 30
+    
+    # Usamos las estimaciones del tamaño vertical de toda la caja
+    total_title_h = len(title_lines) * (title_font.size + title_spacing) - title_spacing
+    total_authors_h = len(authors_lines) * (authors_font.size + authors_spacing) - authors_spacing
+    total_block_h = total_title_h + block_gap + total_authors_h
+    
+    # El centro del espacio blanco libre está calculando entre Presentó (980) y la bajada inferior (1400) -> Mid = 1190
+    y_start_block = 1190 - (total_block_h / 2)
+    
+    # Dibujar título
+    y_current = y_start_block
+    for i, line in enumerate(title_lines):
+        center_text(line, y_current, title_font, anchor="ma")
+        y_current += title_font.size + title_spacing
+        
+    # Salto hacia los autores
+    y_current += block_gap - title_spacing
+    
+    # Dibujar autores
     for i, line in enumerate(authors_lines):
-        y = y_authors_start + i * (authors_font.size + line_spacing)
-        center_text(line, y, authors_font)
+        center_text(line, y_current, authors_font, anchor="ma")
+        y_current += authors_font.size + authors_spacing
 
     # Guardar
     filename = f'certificado_{eliminate_accents(expositor_name)}.pdf'
@@ -109,8 +124,8 @@ def create_exposition_certificate(
 
 # === MAIN SCRIPT ===
 if __name__ == "__main__":
-    folder_path = "congreso_neurociencias"
-    csv_path = os.path.join(folder_path, "Presentadores Congreso.csv")
+    folder_path = "congreso_neurociencias_2026"
+    csv_path = os.path.join(folder_path, "2026 - Presentación de póster.csv")
     certificate_template = os.path.join(folder_path, "certificate_poster.png")
 
     font_dir = os.path.join(folder_path, "nunito-sans")
@@ -127,16 +142,16 @@ if __name__ == "__main__":
         width, _ = img.size
 
     # Tamaños máximos de partida
-    expositor_size = 50
-    title_size = 40
-    authors_size = 33
+    expositor_size = 140
+    title_size = 100
+    authors_size = 70
 
     try:
         df = pd.read_csv(csv_path)
 
         for _, row in df.iterrows():
-            title = row.iloc[0]
-            expositor = row['PRESENTADOR/A']
+            title = row['TITULO DEL PÓSTER']
+            expositor = row['PRESENTADOR']
             authors = row['AUTORES']
 
             if pd.isna(title) or pd.isna(expositor):

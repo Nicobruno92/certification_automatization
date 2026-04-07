@@ -73,17 +73,15 @@ def create_assistant_certificate(
     font = ImageFont.truetype(font_path, adjusted_size)
     
     # Open image and prepare drawing
-    im = Image.open(certificate_template)
+    im = Image.open(certificate_template).convert("RGB")
     width, height = im.size
     draw = ImageDraw.Draw(im)
     
     # Center the text
-    text_width = draw.textlength(assistant_name, font=font)
-    x = (width - text_width) / 2
-    y = 350  # Vertical position for the name
+    y = 920  # Centro vertical exacto entre las cajas de texto de la plantilla de asistentes
     
     # Draw the name
-    draw.text((x, y), assistant_name, fill=text_color, font=font)
+    draw.text((width / 2, y), assistant_name, fill=text_color, font=font, anchor="mm")
     
     # Save certificate
     filename = f'certificado_{eliminate_accents(assistant_name)}.pdf'
@@ -94,13 +92,13 @@ def create_assistant_certificate(
 # === MAIN ===
 if __name__ == "__main__":
     # Configuration
-    folder_path = "congreso_neurociencias"
+    folder_path = "congreso_neurociencias_2026"
     certificate_template = os.path.join(
         folder_path, "certificate_asistente.png"
     )
     
     # CSV with registration data
-    csv_file = "Inscripción al Primer Congreso Latinoamericano de Neurociencias Cognitivas  (respuestas) - Respuestas de formulario.csv"
+    csv_file = "2do Congreso Latinoamericano de Neurociencias Cognitivas (respuestas) - Respuestas de formulario 1 (1).csv"
     csv_path = os.path.join(folder_path, csv_file)
     
     # Font settings
@@ -115,7 +113,7 @@ if __name__ == "__main__":
     text_color = "#000000"
     
     # Font size
-    name_font_size = 80
+    name_font_size = 180
     
     # Process all names from the CSV
     try:
